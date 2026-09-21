@@ -65,7 +65,7 @@ body {
 #game {
   display: none;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   text-align: center;
 }
 .top-bar {
@@ -86,7 +86,7 @@ body {
   cursor: pointer;
 }
 .fish-count {
-  font-size: 2.4rem;
+  font-size: 2.5rem;
   font-weight: 800;
   color: #a8e6ff;
   text-shadow: 0 0 18px rgba(168,230,255,0.45);
@@ -94,8 +94,9 @@ body {
 }
 .stats {
   color: #8ba3b5;
-  font-size: 0.95rem;
-  margin-bottom: 12px;
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 .seal {
   font-size: 115px;
@@ -104,52 +105,55 @@ body {
   transition: transform 0.1s;
   user-select: none;
   -webkit-user-select: none;
+  margin: 4px 0 8px;
 }
 .seal:active { transform: scale(0.88); }
 
 .upgrades {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 18px;
+  gap: 9px;
+  margin-top: 14px;
 }
 .up {
   background: rgba(126,200,227,0.12);
   border: 2px solid rgba(126,200,227,0.35);
   color: #fff;
-  padding: 11px 8px;
+  padding: 10px 7px;
   border-radius: 12px;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   cursor: pointer;
   text-align: center;
+  line-height: 1.25;
 }
-.up:disabled { opacity: 0.35; }
+.up:disabled { opacity: 0.35; cursor: default; }
 .up span {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: #7ec8e3;
   margin-top: 3px;
 }
 
-/* ===== Мини-игра ===== */
-#minigame {
+/* ===== Мини-игры ===== */
+#minigame, #minigame2 {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,20,40,0.92);
+  background: rgba(0,20,40,0.93);
   z-index: 100;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
 }
-#minigame h2 {
+#minigame h2, #minigame2 h2 {
   color: #ffd700;
   margin-bottom: 8px;
 }
-#minigame p {
+#minigame p, #minigame2 p {
   color: #8ba3b5;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
+  text-align: center;
 }
 .gold-fish {
   font-size: 80px;
@@ -157,29 +161,54 @@ body {
   transition: transform 0.1s;
   user-select: none;
 }
-.gold-fish:active { transform: scale(1.2); }
-#mini-score {
+.gold-fish:active { transform: scale(1.25); }
+#mini-score, #mini2-score {
   font-size: 1.8rem;
   color: #ffd700;
-  margin-top: 16px;
+  margin-top: 14px;
 }
-#mini-timer {
+#mini-timer, #mini2-timer {
   font-size: 1.3rem;
   color: #7ec8e3;
-  margin-top: 8px;
+  margin-top: 6px;
+}
+
+/* Вторая мини-игра — ледяная лунка */
+.ice-hole {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #b8e0f0, #4a90b8 60%, #1a3a5c);
+  border: 6px solid #7ec8e3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 30px rgba(126,200,227,0.4);
+  user-select: none;
+}
+.ice-hole.ready {
+  animation: pulse 0.6s infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(126,200,227,0.4); }
+  50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(255,215,0,0.7); }
 }
 
 .floating {
   position: absolute;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: bold;
   color: #7fdbff;
   pointer-events: none;
-  animation: float 0.8s forwards;
+  animation: float 0.85s forwards;
+  z-index: 50;
 }
 @keyframes float {
   0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-70px) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-70px) scale(1.25); }
 }
 </style>
 </head>
@@ -202,22 +231,27 @@ body {
 
   <div class="fish-count" id="fish">0 🐟</div>
   <div class="stats">
-    Клик: +<span id="power">1</span> · Авто: +<span id="auto">0</span>/сек
+    Клик: +<span id="power">1</span> · Авто: +<span id="auto">0</span>/сек<br>
+    Крит: <span id="critChance">0</span>% · Удача: <span id="luck">0</span>%
   </div>
 
   <div class="seal" id="seal" onclick="clickSeal(event)">🦭</div>
 
   <div class="upgrades">
-    <button class="up" id="up1" onclick="buy(1)">Сильный укус<span id="c1">50 🐟</span></button>
-    <button class="up" id="up2" onclick="buy(2)">Авто-ловля<span id="c2">200 🐟</span></button>
-    <button class="up" id="up3" onclick="buy(3)">Крит-укус<span id="c3">500 🐟</span></button>
-    <button class="up" id="up4" onclick="buy(4)">Быстрый тюлень<span id="c4">800 🐟</span></button>
-    <button class="up" id="up5" onclick="buy(5)">Золотая рыбка<span id="c5">1500 🐟</span></button>
-    <button class="up" id="up6" onclick="buy(6)">Стая тюленей<span id="c6">3000 🐟</span></button>
+    <button class="up" id="up1" onclick="buy(1)">Сильный укус<span id="c1">80 🐟</span></button>
+    <button class="up" id="up2" onclick="buy(2)">Авто-ловля<span id="c2">280 🐟</span></button>
+    <button class="up" id="up3" onclick="buy(3)">Крит-укус<span id="c3">650 🐟</span></button>
+    <button class="up" id="up4" onclick="buy(4)">Быстрый тюлень<span id="c4">1100 🐟</span></button>
+    <button class="up" id="up5" onclick="buy(5)">Золотая рыбка<span id="c5">2200 🐟</span></button>
+    <button class="up" id="up6" onclick="buy(6)">Стая тюленей<span id="c6">4500 🐟</span></button>
+    <button class="up" id="up7" onclick="buy(7)">Рыбный магнит<span id="c7">7000 🐟</span></button>
+    <button class="up" id="up8" onclick="buy(8)">Удачный укус<span id="c8">12000 🐟</span></button>
+    <button class="up" id="up9" onclick="buy(9)">Ледяная лунка<span id="c9">18000 🐟</span></button>
+    <button class="up" id="up10" onclick="buy(10)">Тренировка<span id="c10">25000 🐟</span></button>
   </div>
 </div>
 
-<!-- Мини-игра -->
+<!-- Мини-игра 1: Золотая рыба -->
 <div id="minigame">
   <h2>✨ Золотая рыба!</h2>
   <p>Тапай по рыбке как можно быстрее!</p>
@@ -226,55 +260,59 @@ body {
   <div id="mini-timer">5.0</div>
 </div>
 
+<!-- Мини-игра 2: Ледяная лунка -->
+<div id="minigame2">
+  <h2>🧊 Ледяная лунка</h2>
+  <p>Жди, когда рыба клюнет, и быстро тапай!</p>
+  <div class="ice-hole" id="iceHole" onclick="tapIce()">❄️</div>
+  <div id="mini2-score">0</div>
+  <div id="mini2-timer">12.0</div>
+</div>
+
 <script>
 // ===== Данные =====
 let user = null;
 let fish = 0;
 let power = 1;
 let auto = 0;
-let crit = 0;
-let speed = 1000;
-let gold = 0;
-let seals = 1;
-let cost = [0, 50, 200, 500, 800, 1500, 3000];
+let crit = 0;          // шанс крита %
+let speed = 1000;      // интервал авто
+let gold = 0;          // уровень золотой рыбки
+let seals = 1;         // множитель стаи
+let magnet = 0;        // бонус к авто
+let luck = 0;          // шанс удачного укуса %
+let ice = 0;           // уровень ледяной лунки
+let train = 0;         // тренировка (множитель силы)
+
+let cost = [0, 80, 280, 650, 1100, 2200, 4500, 7000, 12000, 18000, 25000];
 
 let autoTimer = null;
 let miniScore = 0;
 let miniTime = 5;
 let miniInterval = null;
 
-// ===== Звук тюленя (Web Audio) =====
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// Для второй мини-игры
+let iceScore = 0;
+let iceTime = 12;
+let iceInterval = null;
+let iceReady = false;
+let iceTimeout = null;
+
+// Звук клика (положи файл seal.mp3 рядом с HTML)
+const sealAudio = new Audio('seal.mp3');
+sealAudio.volume = 0.7;
 
 function playSealSound() {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  const filter = audioCtx.createBiquadFilter();
-
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.15);
-
-  filter.type = 'lowpass';
-  filter.frequency.value = 600;
-
-  gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.25);
+  try {
+    sealAudio.currentTime = 0;
+    sealAudio.play().catch(() => {});
+  } catch (e) {}
 }
 
 // ===== Сохранение =====
 function save() {
   if (!user) return;
-  const data = { fish, power, auto, crit, speed, gold, seals, cost };
+  const data = { fish, power, auto, crit, speed, gold, seals, magnet, luck, ice, train, cost };
   localStorage.setItem('sealGame_' + user, JSON.stringify(data));
 }
 
@@ -283,15 +321,19 @@ function load() {
   if (raw) {
     try {
       const d = JSON.parse(raw);
-      fish = d.fish || 0;
-      power = d.power || 1;
-      auto = d.auto || 0;
-      crit = d.crit || 0;
-      speed = d.speed || 1000;
-      gold = d.gold || 0;
-      seals = d.seals || 1;
-      cost = d.cost || [0, 50, 200, 500, 800, 1500, 3000];
-    } catch(e) {}
+      fish   = d.fish   || 0;
+      power  = d.power  || 1;
+      auto   = d.auto   || 0;
+      crit   = d.crit   || 0;
+      speed  = d.speed  || 1000;
+      gold   = d.gold   || 0;
+      seals  = d.seals  || 1;
+      magnet = d.magnet || 0;
+      luck   = d.luck   || 0;
+      ice    = d.ice    || 0;
+      train  = d.train  || 0;
+      cost   = d.cost   || [0, 80, 280, 650, 1100, 2200, 4500, 7000, 12000, 18000, 25000];
+    } catch (e) {}
   }
 }
 
@@ -327,19 +369,36 @@ function logout() {
 function clickSeal(e) {
   playSealSound();
 
-  let gain = power * seals;
+  let mult = seals * (1 + train * 0.15);
+  let gain = Math.floor(power * mult);
 
   // Крит
+  let isCrit = false;
   if (Math.random() * 100 < crit) {
     gain *= 2;
+    isCrit = true;
+  }
+
+  // Удачный укус
+  if (Math.random() * 100 < luck) {
+    gain *= 5;
+    showFloat(e, 'УДАЧА! +' + gain);
+  } else if (isCrit) {
     showFloat(e, 'КРИТ! +' + gain);
   } else {
     showFloat(e, '+' + gain);
   }
 
-  // Шанс золотой рыбы
-  if (gold > 0 && Math.random() < 0.12) {
+  // Шанс золотой рыбы (гораздо реже)
+  // Базовый шанс 3.5% + 0.8% за каждый уровень gold, максимум \~12%
+  const goldChance = Math.min(0.035 + gold * 0.008, 0.12);
+  if (gold > 0 && Math.random() < goldChance) {
     startMiniGame();
+  }
+
+  // Шанс ледяной лунки (ещё реже)
+  if (ice > 0 && Math.random() < 0.025 + ice * 0.004) {
+    startIceGame();
   }
 
   fish += gain;
@@ -347,8 +406,11 @@ function clickSeal(e) {
   save();
 }
 
-// ===== Мини-игра =====
+// ===== Мини-игра 1: Золотая рыба =====
 function startMiniGame() {
+  if (document.getElementById('minigame').style.display === 'flex' ||
+      document.getElementById('minigame2').style.display === 'flex') return;
+
   miniScore = 0;
   miniTime = 5.0;
   document.getElementById('mini-score').textContent = '0';
@@ -369,15 +431,86 @@ function startMiniGame() {
 function tapGold() {
   miniScore++;
   document.getElementById('mini-score').textContent = miniScore;
-  // Лёгкая вибрация на телефоне
-  if (navigator.vibrate) navigator.vibrate(30);
+  if (navigator.vibrate) navigator.vibrate(25);
 }
 
 function endMiniGame() {
   document.getElementById('minigame').style.display = 'none';
-  const bonus = miniScore * 8 * (gold + 1);
+  const bonus = Math.floor(miniScore * 10 * (gold + 1));
   fish += bonus;
   alert('Золотая рыба поймана!\n+' + bonus + ' 🐟');
+  update();
+  save();
+}
+
+// ===== Мини-игра 2: Ледяная лунка =====
+function startIceGame() {
+  if (document.getElementById('minigame').style.display === 'flex' ||
+      document.getElementById('minigame2').style.display === 'flex') return;
+
+  iceScore = 0;
+  iceTime = 12.0;
+  iceReady = false;
+  document.getElementById('mini2-score').textContent = '0';
+  document.getElementById('mini2-timer').textContent = '12.0';
+  document.getElementById('iceHole').textContent = '❄️';
+  document.getElementById('iceHole').classList.remove('ready');
+  document.getElementById('minigame2').style.display = 'flex';
+
+  if (iceInterval) clearInterval(iceInterval);
+  if (iceTimeout) clearTimeout(iceTimeout);
+
+  iceInterval = setInterval(() => {
+    iceTime -= 0.1;
+    document.getElementById('mini2-timer').textContent = iceTime.toFixed(1);
+    if (iceTime <= 0) {
+      clearInterval(iceInterval);
+      endIceGame();
+    }
+  }, 100);
+
+  scheduleBite();
+}
+
+function scheduleBite() {
+  if (document.getElementById('minigame2').style.display !== 'flex') return;
+  const delay = 1200 + Math.random() * 2800;
+  iceTimeout = setTimeout(() => {
+    if (document.getElementById('minigame2').style.display !== 'flex') return;
+    iceReady = true;
+    document.getElementById('iceHole').textContent = '🐠';
+    document.getElementById('iceHole').classList.add('ready');
+
+    // Если не успел — рыба уходит
+    iceTimeout = setTimeout(() => {
+      if (!iceReady) return;
+      iceReady = false;
+      document.getElementById('iceHole').textContent = '❄️';
+      document.getElementById('iceHole').classList.remove('ready');
+      scheduleBite();
+    }, 900 + Math.random() * 500);
+  }, delay);
+}
+
+function tapIce() {
+  if (!iceReady) return;
+  iceReady = false;
+  iceScore++;
+  document.getElementById('mini2-score').textContent = iceScore;
+  document.getElementById('iceHole').textContent = '❄️';
+  document.getElementById('iceHole').classList.remove('ready');
+  if (navigator.vibrate) navigator.vibrate(40);
+  if (iceTimeout) clearTimeout(iceTimeout);
+  scheduleBite();
+}
+
+function endIceGame() {
+  document.getElementById('minigame2').style.display = 'none';
+  if (iceTimeout) clearTimeout(iceTimeout);
+  if (iceInterval) clearInterval(iceInterval);
+  const bonus = Math.floor(iceScore * 35 * (ice + 1));
+  fish += bonus;
+  alert('Ледяная рыбалка окончена!\nПоймано: ' + iceScore + '\n+' + bonus + ' 🐟');
   update();
   save();
 }
@@ -388,12 +521,53 @@ function buy(id) {
 
   fish -= cost[id];
 
-  if (id === 1) { power += 1; cost[1] = Math.floor(cost[1] * 1.48); }
-  if (id === 2) { auto += 1; cost[2] = Math.floor(cost[2] * 1.55); }
-  if (id === 3) { if (crit < 45) { crit += 5; cost[3] = Math.floor(cost[3] * 1.65); } }
-  if (id === 4) { if (speed > 280) { speed = Math.max(280, speed - 90); cost[4] = Math.floor(cost[4] * 1.7); startAuto(); } }
-  if (id === 5) { gold += 1; cost[5] = Math.floor(cost[5] * 1.85); }
-  if (id === 6) { seals += 1; cost[6] = Math.floor(cost[6] * 2.0); }
+  if (id === 1) { // Сильный укус
+    power += 1;
+    cost[1] = Math.floor(cost[1] * 1.55);
+  }
+  if (id === 2) { // Авто
+    auto += 1;
+    cost[2] = Math.floor(cost[2] * 1.62);
+  }
+  if (id === 3) { // Крит
+    if (crit < 50) {
+      crit += 4;
+      cost[3] = Math.floor(cost[3] * 1.70);
+    }
+  }
+  if (id === 4) { // Скорость авто
+    if (speed > 250) {
+      speed = Math.max(250, speed - 80);
+      cost[4] = Math.floor(cost[4] * 1.75);
+      startAuto();
+    }
+  }
+  if (id === 5) { // Золотая
+    gold += 1;
+    cost[5] = Math.floor(cost[5] * 1.90);
+  }
+  if (id === 6) { // Стая
+    seals += 1;
+    cost[6] = Math.floor(cost[6] * 2.05);
+  }
+  if (id === 7) { // Магнит
+    magnet += 1;
+    cost[7] = Math.floor(cost[7] * 1.85);
+  }
+  if (id === 8) { // Удача
+    if (luck < 25) {
+      luck += 3;
+      cost[8] = Math.floor(cost[8] * 1.95);
+    }
+  }
+  if (id === 9) { // Ледяная лунка
+    ice += 1;
+    cost[9] = Math.floor(cost[9] * 2.10);
+  }
+  if (id === 10) { // Тренировка
+    train += 1;
+    cost[10] = Math.floor(cost[10] * 2.20);
+  }
 
   update();
   save();
@@ -403,10 +577,13 @@ function buy(id) {
 function startAuto() {
   if (autoTimer) clearInterval(autoTimer);
   autoTimer = setInterval(() => {
-    if (auto > 0) {
-      fish += auto * seals;
-      update();
-      save();
+    if (auto > 0 || magnet > 0) {
+      const gain = Math.floor((auto + magnet * 2) * seals * (1 + train * 0.1));
+      if (gain > 0) {
+        fish += gain;
+        update();
+        save();
+      }
     }
   }, speed);
 }
@@ -414,36 +591,45 @@ function startAuto() {
 // ===== Обновление UI =====
 function update() {
   document.getElementById('fish').textContent = Math.floor(fish) + ' 🐟';
-  document.getElementById('power').textContent = power * seals;
-  document.getElementById('auto').textContent = auto * seals;
 
-  document.getElementById('c1').textContent = cost[1] + ' 🐟';
-  document.getElementById('c2').textContent = cost[2] + ' 🐟';
-  document.getElementById('c3').textContent = cost[3] + ' 🐟';
-  document.getElementById('c4').textContent = cost[4] + ' 🐟';
-  document.getElementById('c5').textContent = cost[5] + ' 🐟';
-  document.getElementById('c6').textContent = cost[6] + ' 🐟';
+  const clickPower = Math.floor(power * seals * (1 + train * 0.15));
+  const autoPower  = Math.floor((auto + magnet * 2) * seals * (1 + train * 0.1));
 
+  document.getElementById('power').textContent = clickPower;
+  document.getElementById('auto').textContent = autoPower;
+  document.getElementById('critChance').textContent = crit;
+  document.getElementById('luck').textContent = luck;
+
+  // Цены
+  for (let i = 1; i <= 10; i++) {
+    document.getElementById('c' + i).textContent = cost[i] + ' 🐟';
+  }
+
+  // Доступность
   document.getElementById('up1').disabled = fish < cost[1];
   document.getElementById('up2').disabled = fish < cost[2];
-  document.getElementById('up3').disabled = fish < cost[3] || crit >= 45;
-  document.getElementById('up4').disabled = fish < cost[4] || speed <= 280;
+  document.getElementById('up3').disabled = fish < cost[3] || crit >= 50;
+  document.getElementById('up4').disabled = fish < cost[4] || speed <= 250;
   document.getElementById('up5').disabled = fish < cost[5];
   document.getElementById('up6').disabled = fish < cost[6];
+  document.getElementById('up7').disabled = fish < cost[7];
+  document.getElementById('up8').disabled = fish < cost[8] || luck >= 25;
+  document.getElementById('up9').disabled = fish < cost[9];
+  document.getElementById('up10').disabled = fish < cost[10];
 }
 
 function showFloat(e, text) {
   const el = document.createElement('div');
   el.className = 'floating';
   el.textContent = text;
-  el.style.left = (e.clientX - 20) + 'px';
-  el.style.top = (e.clientY - 30) + 'px';
+  el.style.left = (e.clientX - 25) + 'px';
+  el.style.top  = (e.clientY - 35) + 'px';
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 800);
+  setTimeout(() => el.remove(), 850);
 }
 
 // Автосохранение
-setInterval(() => { if (user) save(); }, 2500);
+setInterval(() => { if (user) save(); }, 3000);
 </script>
 </body>
   </html>
